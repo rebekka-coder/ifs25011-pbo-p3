@@ -1,11 +1,11 @@
 # Java compiled files
 *.class
 
-# Build output directories
+# Build output
 out/
 build/
-target/
 bin/
+target/
 
 # IDE files
 .idea/
