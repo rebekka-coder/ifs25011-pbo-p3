@@ -3,6 +3,11 @@ Folder proyek: ifs18005-java-oop (ganti "ifs18005" dengan username Anda -> {user
 
 Studi kasus: catatan-keuangan, buku-tamu, inventaris-barang, jadwal-kegiatan, kontak-teman
 
+Modul bersama:
+  shared/src/domain/repository/IRepository.java       kontrak repository generik
+  shared/src/adapter/repository/InMemoryRepository.java  basis in-memory generik
+  (dipakai oleh kelima studi kasus, tidak lagi di-copy-paste)
+
 Struktur tiap studi kasus:
   src/domain/{entity,exception,repository}   aturan & model inti (tanpa I/O)
   src/usecase                                logika bisnis, melempar checked DomainException
@@ -12,7 +17,11 @@ Struktur tiap studi kasus:
 
 Compile & jalankan (dari dalam tiap folder studi kasus, mis. catatan-keuangan/):
 
-  javac -d output -sourcepath src src/App.java
+  Linux/macOS/Git Bash:
+    javac -d output -sourcepath src:../shared/src src/App.java
+  Windows (CMD/PowerShell):
+    javac -d output -sourcepath "src;../shared/src" src/App.java
+
   java -cp output App
 
 Uji dengan test case (Linux/macOS/Git Bash):
