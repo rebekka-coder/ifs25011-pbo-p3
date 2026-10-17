@@ -9,7 +9,8 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Use case kontak teman. Tidak melakukan I/O, hanya melempar checked exception domain.
+ * Use case kontak teman. Menerima input mentah (String) dari View, melakukan parsing dan validasi,
+ * lalu melempar checked exception domain jika gagal. Tidak melakukan I/O.
  */
 public class ContactUseCase {
     private final IContactRepository contactRepository;
@@ -18,79 +19,97 @@ public class ContactUseCase {
         this.contactRepository = contactRepository;
     }
 
-    /** Mengambil semua data yang tersimpan. */
+    /** Mengambil semua kontak. */
     public List<Contact> getAllContacts() {
         return contactRepository.findAll();
     }
 
     /** Menambahkan kontak baru setelah validasi. */
-    /** Form tambah data baru. */
     public Contact addContact(String name, String phone, String email) throws ValidationException {
-        requireText(name, "Nama tidak boleh kosong!");
-        requireText(phone, "Nomor telepon tidak boleh kosong!");
-        requireText(email, "Email tidak boleh kosong!");
+        InputValidator.requireText(name, "Nama tidak boleh kosong!");
+        InputValidator.requireText(phone, "Nomor telepon tidak boleh kosong!");
+        InputValidator.requireText(email, "Email tidak boleh kosong!");
         return contactRepository.save(name, phone, email);
     }
 
     /**
-     * Mengubah nama, telepon, dan/atau email kontak.
-     * Parameter {@code null} berarti field tersebut tidak diubah.
+     * Memeriksa teks ID (angka) tanpa mengubah apa pun.
+     * Dipakai View agar ID yang salah format langsung ditolak sebelum field berikutnya ditanyakan.
+     *
+     * @throws ValidationException jika {@code rawId} bukan angka
      */
-    public void updateContact(int id, String name, String phone, String email)
-            throws EntityNotFoundException, ValidationException {
+    public void validateId(String rawId) throws ValidationException {
+        InputValidator.parseId(rawId);
+    }
+
+    /**
+     * Mengubah nama, telepon, dan/atau email kontak berdasarkan input mentah dari user.
+     * Teks kosong pada sebuah field berarti field tersebut tidak diubah.
+     *
+     * @throws ValidationException     jika {@code rawId} bukan angka
+     * @throws EntityNotFoundException jika tidak ada kontak dengan ID tersebut
+     */
+    public void updateContact(String rawId, String name, String phone, String email)
+            throws ValidationException, EntityNotFoundException {
+        int id = InputValidator.parseId(rawId);
         Optional<Contact> found = contactRepository.findById(id);
         if (found.isEmpty()) {
             throw new EntityNotFoundException(id);
         }
 
-        requireTextIfPresent(name, "Nama tidak boleh kosong!");
-        requireTextIfPresent(phone, "Nomor telepon tidak boleh kosong!");
-        requireTextIfPresent(email, "Email tidak boleh kosong!");
-
         Contact contact = found.get();
-        if (name != null) {
-            contact.changeName(name);
+        String newName = InputValidator.blankToNull(name);
+        String newPhone = InputValidator.blankToNull(phone);
+        String newEmail = InputValidator.blankToNull(email);
+        if (newName != null) {
+            contact.changeName(newName);
         }
-        if (phone != null) {
-            contact.changePhone(phone);
+        if (newPhone != null) {
+            contact.changePhone(newPhone);
         }
-        if (email != null) {
-            contact.changeEmail(email);
+        if (newEmail != null) {
+            contact.changeEmail(newEmail);
         }
         contactRepository.update(contact);
     }
 
     /** Mencari kontak berdasarkan nama (case-insensitive). */
-    /** Form pencarian data berdasarkan kata kunci. */
     public List<Contact> searchContacts(String keyword) {
         String lowerKeyword = keyword.toLowerCase();
         return contactRepository.findBy(c -> c.getName().toLowerCase().contains(lowerKeyword));
     }
 
-    /** Mengurutkan data sesuai kriteria {@link SortOption}. */
-    public List<Contact> sortContacts(SortOption option) {
+    /**
+     * Mengurutkan kontak sesuai pilihan menu mentah dari user (1 = nama A-Z, 2 = nama Z-A).
+     *
+     * @throws ValidationException jika pilihan tidak dikenali
+     */
+    public List<Contact> sortContacts(String choice) throws ValidationException {
+        SortOption option = parseSortOption(choice);
         return contactRepository.findAll().stream()
                 .sorted(option.comparator())
                 .toList();
     }
 
-    /** Menghapus data berdasarkan ID; melempar exception jika tidak ditemukan. */
-    public void removeContact(int id) throws EntityNotFoundException {
+    /**
+     * Menghapus kontak berdasarkan ID mentah dari user.
+     *
+     * @throws ValidationException     jika {@code rawId} bukan angka
+     * @throws EntityNotFoundException jika tidak ada kontak dengan ID tersebut
+     */
+    public void removeContact(String rawId) throws ValidationException, EntityNotFoundException {
+        int id = InputValidator.parseId(rawId);
         if (!contactRepository.deleteById(id)) {
             throw new EntityNotFoundException(id);
         }
     }
 
-    private void requireText(String value, String message) throws ValidationException {
-        if (value == null || value.trim().isEmpty()) {
-            throw new ValidationException(message);
-        }
-    }
-
-    /** Validasi opsional untuk update parsial: null berarti field tidak diubah. */
-    private void requireTextIfPresent(String value, String message) throws ValidationException {
-        if (value != null) {
-            requireText(value, message);
-        }
+    /** Memetakan pilihan menu menjadi {@link SortOption}; melempar {@link ValidationException} jika tidak dikenali. */
+    private SortOption parseSortOption(String choice) throws ValidationException {
+        return switch (choice) {
+            case "1" -> SortOption.NAME_ASC;
+            case "2" -> SortOption.NAME_DESC;
+            default -> throw new ValidationException("Pilihan tidak valid!");
+        };
     }
 }

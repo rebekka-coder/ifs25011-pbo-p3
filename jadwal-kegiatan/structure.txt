@@ -1,0 +1,26 @@
+Struktur jadwal-kegiatan (Clean Architecture)
+
+jadwal-kegiatan/
+  src/                          kode milik studi kasus ini
+    App.java
+    adapter/presenter/ActivityPresenter.java
+    adapter/repository/ActivityRepository.java
+    domain/entity/Activity.java
+    domain/entity/SortOption.java
+    domain/repository/IActivityRepository.java
+    framework/view/ActivityView.java
+    usecase/ActivityUseCase.java
+  test-cases/                   input uji (TC-xx.tc)
+  input.txt                     contoh input
+
+shared/src/                     kode bersama semua studi kasus (ditambahkan lewat -sourcepath)
+    adapter/presenter/BasePresenter.java
+    adapter/repository/InMemoryRepository.java
+    domain/exception/DomainException.java
+    domain/exception/EntityNotFoundException.java
+    domain/exception/ValidationException.java
+    domain/repository/IRepository.java
+    framework/util/InputUtil.java
+    usecase/InputValidator.java
+
+Arah dependensi: framework -> adapter -> usecase -> domain (domain tidak bergantung pada layer lain).

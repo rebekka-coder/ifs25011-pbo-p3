@@ -6,24 +6,12 @@ import java.util.List;
 /**
  * Presenter yang memformat data barang menjadi output layar.
  */
-public class ItemPresenter {
+public class ItemPresenter extends BasePresenter<Item> {
 
-    /** Memformat satu data menjadi baris teks untuk ditampilkan. */
-    private String format(Item item) {
+    @Override
+    protected String format(Item item) {
         return String.format("[%d] %s | Stok: %d | Kategori: %s",
                 item.getId(), item.getName(), item.getQuantity(), item.getCategory());
-    }
-
-    /** Helper umum untuk mencetak daftar; menampilkan pesan kosong jika tidak ada data. */
-    private void printList(List<Item> items, String header, String emptyMessage) {
-        System.out.println(header);
-        if (items.isEmpty()) {
-            System.out.println(emptyMessage);
-            return;
-        }
-        for (Item item : items) {
-            System.out.println(format(item));
-        }
     }
 
     /** Menampilkan seluruh data yang tersimpan. */
@@ -64,25 +52,5 @@ public class ItemPresenter {
     /** Menampilkan pesan gagal saat data dengan ID tertentu tidak dapat dihapus. */
     public void showRemoveFailed(int id) {
         System.out.printf("[!] Gagal menghapus barang dengan ID: %d.%n", id);
-    }
-
-    /** Menampilkan pesan saat pilihan menu tidak dikenali. */
-    public void showInvalidChoice() {
-        System.out.println("[!] Pilihan tidak dimengerti.");
-    }
-
-    /** Menampilkan pesan saat ID yang dimasukkan bukan angka. */
-    public void showInvalidId() {
-        System.out.println("[!] ID tidak valid!");
-    }
-
-    /** Menampilkan pesan saat opsi pengurutan tidak valid. */
-    public void showInvalidSortOption() {
-        System.out.println("[!] Pilihan tidak valid!");
-    }
-
-    /** Menampilkan pesan kegagalan validasi dari domain. */
-    public void showValidationError(String message) {
-        System.out.println("[!] " + message);
     }
 }

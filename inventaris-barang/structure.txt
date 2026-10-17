@@ -1,0 +1,26 @@
+Struktur inventaris-barang (Clean Architecture)
+
+inventaris-barang/
+  src/                          kode milik studi kasus ini
+    App.java
+    adapter/presenter/ItemPresenter.java
+    adapter/repository/ItemRepository.java
+    domain/entity/Item.java
+    domain/entity/SortOption.java
+    domain/repository/IItemRepository.java
+    framework/view/ItemView.java
+    usecase/ItemUseCase.java
+  test-cases/                   input uji (TC-xx.tc)
+  input.txt                     contoh input
+
+shared/src/                     kode bersama semua studi kasus (ditambahkan lewat -sourcepath)
+    adapter/presenter/BasePresenter.java
+    adapter/repository/InMemoryRepository.java
+    domain/exception/DomainException.java
+    domain/exception/EntityNotFoundException.java
+    domain/exception/ValidationException.java
+    domain/repository/IRepository.java
+    framework/util/InputUtil.java
+    usecase/InputValidator.java
+
+Arah dependensi: framework -> adapter -> usecase -> domain (domain tidak bergantung pada layer lain).

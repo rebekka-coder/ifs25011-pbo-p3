@@ -8,30 +8,15 @@ import java.util.List;
  * Presenter yang memformat data dari use case menjadi output layar.
  * Entity tidak memiliki toString() untuk tampilan; format ada di sini.
  */
-public class FinancePresenter {
+public class FinancePresenter extends BasePresenter<Transaction> {
 
-    /** Memformat satu transaksi menjadi baris teks. */
-    /** Memformat satu data menjadi baris teks untuk ditampilkan. */
-    private String format(Transaction t) {
+    @Override
+    protected String format(Transaction t) {
         String type = t.getType() == TransactionType.INCOME ? "[Pemasukan]" : "[Pengeluaran]";
         return String.format("[%d] %s | Rp %d | %s", t.getId(), t.getDescription(), t.getAmount(), type);
     }
 
-    /** Helper umum untuk menampilkan daftar transaksi. */
-    /** Helper umum untuk mencetak daftar; menampilkan pesan kosong jika tidak ada data. */
-    private void printList(List<Transaction> list, String header, String emptyMessage) {
-        System.out.println(header);
-        if (list.isEmpty()) {
-            System.out.println(emptyMessage);
-            return;
-        }
-        for (Transaction t : list) {
-            System.out.println(format(t));
-        }
-    }
-
     /** Menampilkan daftar semua transaksi beserta saldo. */
-    /** Menampilkan seluruh data yang tersimpan. */
     public void showTransactions(List<Transaction> list, long balance) {
         printList(list, "Daftar Transaksi:", "- Belum ada transaksi!");
         System.out.printf("Saldo: Rp %d%n", balance);
@@ -65,26 +50,5 @@ public class FinancePresenter {
     /** Menampilkan pesan gagal saat data dengan ID tertentu tidak dapat dihapus. */
     public void showRemoveFailed(int id) {
         System.out.printf("[!] Gagal menghapus transaksi dengan ID: %d.%n", id);
-    }
-
-    /** Menampilkan pesan saat pilihan menu tidak dikenali. */
-    public void showInvalidChoice() {
-        System.out.println("[!] Pilihan tidak dimengerti.");
-    }
-
-    /** Menampilkan pesan saat ID yang dimasukkan bukan angka. */
-    public void showInvalidId() {
-        System.out.println("[!] ID tidak valid!");
-    }
-
-    /** Menampilkan pesan saat opsi pengurutan tidak valid. */
-    public void showInvalidSortOption() {
-        System.out.println("[!] Pilihan tidak valid!");
-    }
-
-    /** Menampilkan pesan kegagalan validasi dari domain. */
-    /** Menampilkan pesan kegagalan validasi dari domain. */
-    public void showValidationError(String message) {
-        System.out.println("[!] " + message);
     }
 }

@@ -1,11 +1,11 @@
 package framework.view;
 
 import adapter.presenter.FinancePresenter;
-import domain.entity.SortOption;
 import domain.entity.TransactionType;
 import domain.exception.EntityNotFoundException;
 import domain.exception.ValidationException;
 import framework.util.InputUtil;
+import static framework.util.InputUtil.CANCEL_INPUT;
 import usecase.FinanceUseCase;
 
 /**
@@ -13,9 +13,6 @@ import usecase.FinanceUseCase;
  * Menerima input user, memanggil use case, dan menangani exception domain.
  */
 public class FinanceView {
-    /** Input yang dipakai user untuk membatalkan operasi atau keluar dari aplikasi. */
-    private static final String CANCEL_INPUT = "x";
-
     private final FinanceUseCase useCase;
     private final FinancePresenter presenter;
 
@@ -63,7 +60,6 @@ public class FinanceView {
     }
 
     /** Form tambah pemasukan/pengeluaran. */
-    /** Form tambah data baru. */
     private void addTransaction(TransactionType type) {
         System.out.println(type == TransactionType.INCOME ? "[Tambah Pemasukan]" : "[Tambah Pengeluaran]");
         String description = InputUtil.input("Keterangan (x Jika Batal)");
@@ -73,15 +69,13 @@ public class FinanceView {
         String strAmount = InputUtil.input("Jumlah");
 
         try {
-            long amount = parseAmount(strAmount);
-            presenter.showAddSuccess(useCase.addTransaction(description, amount, type));
+            presenter.showAddSuccess(useCase.addTransaction(description, strAmount, type));
         } catch (ValidationException e) {
             presenter.showValidationError(e.getMessage());
         }
     }
 
-    /** Form hapus transaksi berdasarkan ID. */
-    /** Menghapus data berdasarkan ID; melempar exception jika tidak ditemukan. */
+    /** Form hapus transaksi berdasarkan ID; menampilkan pesan gagal jika ID salah atau tidak ditemukan. */
     private void removeTransaction() {
         System.out.println("[Hapus Transaksi]");
         String strId = InputUtil.input("ID Transaksi (x Jika Batal)");
@@ -90,18 +84,16 @@ public class FinanceView {
         }
 
         try {
-            int id = parseId(strId);
-            useCase.removeTransaction(id);
+            useCase.removeTransaction(strId);
             presenter.showRemoveSuccess();
         } catch (ValidationException e) {
-            presenter.showInvalidId();
+            presenter.showValidationError(e.getMessage());
         } catch (EntityNotFoundException e) {
             presenter.showRemoveFailed(e.getId());
         }
     }
 
     /** Form cari transaksi berdasarkan keterangan. */
-    /** Form pencarian data berdasarkan kata kunci. */
     private void searchTransaction() {
         System.out.println("[Cari Transaksi]");
         String keyword = InputUtil.input("Kata Kunci (x Jika Batal)");
@@ -110,8 +102,7 @@ public class FinanceView {
         }
     }
 
-    /** Form urutkan transaksi. */
-    /** Mengurutkan data sesuai kriteria {@link SortOption}. */
+    /** Form urutkan transaksi: memilih kriteria lalu menampilkan hasilnya. */
     private void sortTransaction() {
         System.out.println("[Urutkan Transaksi]");
         System.out.println("1. Jumlah (Terkecil)");
@@ -126,39 +117,10 @@ public class FinanceView {
             return;
         }
 
-        SortOption option = mapSortOption(input);
-        if (option == null) {
-            presenter.showInvalidSortOption();
-            return;
-        }
-        presenter.showSortedTransactions(useCase.sortTransactions(option));
-    }
-
-    /** Mengonversi input menjadi ID; melempar {@link ValidationException} jika bukan angka. */
-    private int parseId(String value) throws ValidationException {
         try {
-            return Integer.parseInt(value.trim());
-        } catch (NumberFormatException e) {
-            throw new ValidationException("ID tidak valid!");
+            presenter.showSortedTransactions(useCase.sortTransactions(input));
+        } catch (ValidationException e) {
+            presenter.showValidationError(e.getMessage());
         }
-    }
-
-    private long parseAmount(String value) throws ValidationException {
-        try {
-            return Long.parseLong(value.trim());
-        } catch (NumberFormatException e) {
-            throw new ValidationException("Jumlah tidak valid!");
-        }
-    }
-
-    /** Memetakan pilihan menu ke {@link SortOption}; null jika tidak dikenali. */
-    private SortOption mapSortOption(String input) {
-        return switch (input) {
-            case "1" -> SortOption.AMOUNT_ASC;
-            case "2" -> SortOption.AMOUNT_DESC;
-            case "3" -> SortOption.INCOME_FIRST;
-            case "4" -> SortOption.EXPENSE_FIRST;
-            default -> null;
-        };
     }
 }

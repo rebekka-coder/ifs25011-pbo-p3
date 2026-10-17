@@ -4,15 +4,13 @@ import adapter.presenter.GuestPresenter;
 import domain.exception.EntityNotFoundException;
 import domain.exception.ValidationException;
 import framework.util.InputUtil;
+import static framework.util.InputUtil.CANCEL_INPUT;
 import usecase.GuestUseCase;
 
 /**
  * Tampilan konsol aplikasi buku tamu.
  */
 public class GuestView {
-    /** Input yang dipakai user untuk membatalkan operasi atau keluar dari aplikasi. */
-    private static final String CANCEL_INPUT = "x";
-
     private final GuestUseCase useCase;
     private final GuestPresenter presenter;
 
@@ -53,7 +51,7 @@ public class GuestView {
         System.out.println("x. Keluar");
     }
 
-    /** Form tambah data baru. */
+    /** Form pendaftaran tamu baru. */
     private void registerGuest() {
         System.out.println("[Mendaftarkan Tamu]");
         String name = InputUtil.input("Nama (x Jika Batal)");
@@ -81,7 +79,7 @@ public class GuestView {
         }
     }
 
-    /** Menghapus data berdasarkan ID; melempar exception jika tidak ditemukan. */
+    /** Form hapus tamu berdasarkan ID; menampilkan pesan gagal jika ID salah atau tidak ditemukan. */
     private void removeGuest() {
         System.out.println("[Menghapus Tamu]");
         String strId = InputUtil.input("[ID Tamu] yang dihapus (x Jika Batal)");
@@ -90,22 +88,13 @@ public class GuestView {
         }
 
         try {
-            int id = parseId(strId);
-            useCase.removeGuest(id);
+            useCase.removeGuest(strId);
             presenter.showRemoveSuccess();
         } catch (ValidationException e) {
-            presenter.showInvalidId();
+            presenter.showValidationError(e.getMessage());
         } catch (EntityNotFoundException e) {
             presenter.showRemoveFailed(e.getId());
         }
     }
 
-    /** Mengonversi input menjadi ID; melempar {@link ValidationException} jika bukan angka. */
-    private int parseId(String value) throws ValidationException {
-        try {
-            return Integer.parseInt(value.trim());
-        } catch (NumberFormatException e) {
-            throw new ValidationException("ID tidak valid!");
-        }
-    }
 }

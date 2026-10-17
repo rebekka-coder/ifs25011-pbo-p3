@@ -1,19 +1,16 @@
 package framework.view;
 
 import adapter.presenter.ContactPresenter;
-import domain.entity.SortOption;
 import domain.exception.EntityNotFoundException;
 import domain.exception.ValidationException;
 import framework.util.InputUtil;
+import static framework.util.InputUtil.CANCEL_INPUT;
 import usecase.ContactUseCase;
 
 /**
  * Tampilan konsol aplikasi kontak teman.
  */
 public class ContactView {
-    /** Input yang dipakai user untuk membatalkan operasi atau keluar dari aplikasi. */
-    private static final String CANCEL_INPUT = "x";
-
     private final ContactUseCase useCase;
     private final ContactPresenter presenter;
 
@@ -58,7 +55,7 @@ public class ContactView {
         System.out.println("x. Keluar");
     }
 
-    /** Form tambah data baru. */
+    /** Form tambah kontak baru. */
     private void addContact() {
         System.out.println("[Menambah Kontak]");
         String name = InputUtil.input("Nama (x Jika Batal)");
@@ -75,8 +72,7 @@ public class ContactView {
         }
     }
 
-    /** Form ubah parsial: input kosong berarti field tidak diubah. */
-    /** Form ubah data berdasarkan ID. */
+    /** Form ubah kontak: input kosong berarti field tidak diubah. */
     private void updateContact() {
         System.out.println("[Mengubah Kontak]");
         String strId = InputUtil.input("ID Kontak yang diubah (x Jika Batal)");
@@ -84,11 +80,11 @@ public class ContactView {
             return;
         }
 
-        int id;
+        // ID divalidasi lebih dulu (fail-fast) sebelum field baru ditanyakan.
         try {
-            id = parseId(strId);
+            useCase.validateId(strId);
         } catch (ValidationException e) {
-            presenter.showInvalidId();
+            presenter.showValidationError(e.getMessage());
             return;
         }
 
@@ -96,13 +92,8 @@ public class ContactView {
         String newPhone = InputUtil.input("Telepon Baru (Kosongkan jika tidak ingin mengubah)");
         String newEmail = InputUtil.input("Email Baru (Kosongkan jika tidak ingin mengubah)");
 
-        // null berarti field tersebut tidak diubah
-        String name = blankToNull(newName);
-        String phone = blankToNull(newPhone);
-        String email = blankToNull(newEmail);
-
         try {
-            useCase.updateContact(id, name, phone, email);
+            useCase.updateContact(strId, newName, newPhone, newEmail);
             presenter.showUpdateSuccess();
         } catch (EntityNotFoundException e) {
             presenter.showUpdateFailed(e.getId());
@@ -120,7 +111,7 @@ public class ContactView {
         }
     }
 
-    /** Mengurutkan data sesuai kriteria {@link SortOption}. */
+    /** Form pengurutan kontak: memilih kriteria lalu menampilkan hasilnya. */
     private void sortContact() {
         System.out.println("[Mengurutkan Kontak]");
         System.out.println("Pilihan Pengurutan:");
@@ -134,15 +125,14 @@ public class ContactView {
             return;
         }
 
-        SortOption option = mapSortOption(input);
-        if (option == null) {
-            presenter.showInvalidSortOption();
-            return;
+        try {
+            presenter.showSortedContacts(useCase.sortContacts(input));
+        } catch (ValidationException e) {
+            presenter.showValidationError(e.getMessage());
         }
-        presenter.showSortedContacts(useCase.sortContacts(option));
     }
 
-    /** Menghapus data berdasarkan ID; melempar exception jika tidak ditemukan. */
+    /** Form hapus kontak berdasarkan ID; menampilkan pesan gagal jika ID salah atau tidak ditemukan. */
     private void removeContact() {
         System.out.println("[Menghapus Kontak]");
         String strId = InputUtil.input("[ID Kontak] yang dihapus (x Jika Batal)");
@@ -151,36 +141,12 @@ public class ContactView {
         }
 
         try {
-            int id = parseId(strId);
-            useCase.removeContact(id);
+            useCase.removeContact(strId);
             presenter.showRemoveSuccess();
         } catch (ValidationException e) {
-            presenter.showInvalidId();
+            presenter.showValidationError(e.getMessage());
         } catch (EntityNotFoundException e) {
             presenter.showRemoveFailed(e.getId());
         }
-    }
-
-    /** Mengonversi input menjadi ID; melempar {@link ValidationException} jika bukan angka. */
-    private int parseId(String value) throws ValidationException {
-        try {
-            return Integer.parseInt(value.trim());
-        } catch (NumberFormatException e) {
-            throw new ValidationException("ID tidak valid!");
-        }
-    }
-
-    /** Memetakan pilihan menu ke {@link SortOption}; null jika tidak dikenali. */
-    private SortOption mapSortOption(String input) {
-        return switch (input) {
-            case "1" -> SortOption.NAME_ASC;
-            case "2" -> SortOption.NAME_DESC;
-            default -> null;
-        };
-    }
-
-    /** Mengubah input kosong menjadi null (null berarti field tidak diubah). */
-    private String blankToNull(String value) {
-        return value.isBlank() ? null : value;
     }
 }

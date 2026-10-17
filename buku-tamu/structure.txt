@@ -1,0 +1,25 @@
+Struktur buku-tamu (Clean Architecture)
+
+buku-tamu/
+  src/                          kode milik studi kasus ini
+    App.java
+    adapter/presenter/GuestPresenter.java
+    adapter/repository/GuestRepository.java
+    domain/entity/Guest.java
+    domain/repository/IGuestRepository.java
+    framework/view/GuestView.java
+    usecase/GuestUseCase.java
+  test-cases/                   input uji (TC-xx.tc)
+  input.txt                     contoh input
+
+shared/src/                     kode bersama semua studi kasus (ditambahkan lewat -sourcepath)
+    adapter/presenter/BasePresenter.java
+    adapter/repository/InMemoryRepository.java
+    domain/exception/DomainException.java
+    domain/exception/EntityNotFoundException.java
+    domain/exception/ValidationException.java
+    domain/repository/IRepository.java
+    framework/util/InputUtil.java
+    usecase/InputValidator.java
+
+Arah dependensi: framework -> adapter -> usecase -> domain (domain tidak bergantung pada layer lain).

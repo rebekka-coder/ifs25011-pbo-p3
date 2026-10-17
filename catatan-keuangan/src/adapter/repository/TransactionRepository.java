@@ -9,9 +9,6 @@ import domain.repository.ITransactionRepository;
  */
 public class TransactionRepository extends InMemoryRepository<Transaction, Integer>
         implements ITransactionRepository {
-    /** Penghitung ID otomatis, bertambah setiap kali transaksi baru disimpan. */
-    private int idCounter = 0;
-
     public TransactionRepository() {
         super(Transaction::getId);
     }
@@ -19,10 +16,5 @@ public class TransactionRepository extends InMemoryRepository<Transaction, Integ
     @Override
     public Transaction save(String description, long amount, TransactionType type) {
         return save(new Transaction(nextId(), description, amount, type));
-    }
-
-    /** Menghasilkan ID unik berikutnya. */
-    private int nextId() {
-        return ++idCounter;
     }
 }

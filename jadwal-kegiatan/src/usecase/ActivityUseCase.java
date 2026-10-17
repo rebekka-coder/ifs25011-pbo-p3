@@ -9,7 +9,8 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Use case jadwal kegiatan. Tidak melakukan I/O, hanya melempar checked exception domain.
+ * Use case jadwal kegiatan. Menerima input mentah (String) dari View, melakukan parsing dan validasi,
+ * lalu melempar checked exception domain jika gagal. Tidak melakukan I/O.
  */
 public class ActivityUseCase {
     private final IActivityRepository activityRepository;
@@ -18,43 +19,56 @@ public class ActivityUseCase {
         this.activityRepository = activityRepository;
     }
 
-    /** Mengambil semua data yang tersimpan. */
+    /** Mengambil semua kegiatan. */
     public List<Activity> getAllActivities() {
         return activityRepository.findAll();
     }
 
     /** Menambahkan kegiatan baru setelah validasi. */
     public Activity addActivity(String title, String day, String time) throws ValidationException {
-        requireText(title, "Judul kegiatan tidak boleh kosong!");
-        requireText(day, "Hari tidak boleh kosong!");
-        requireText(time, "Waktu tidak boleh kosong!");
+        InputValidator.requireText(title, "Judul kegiatan tidak boleh kosong!");
+        InputValidator.requireText(day, "Hari tidak boleh kosong!");
+        InputValidator.requireText(time, "Waktu tidak boleh kosong!");
         return activityRepository.save(title, day, time);
     }
 
     /**
-     * Mengubah judul, hari, dan/atau waktu kegiatan.
-     * Parameter {@code null} berarti field tersebut tidak diubah.
+     * Memeriksa teks ID (angka) tanpa mengubah apa pun.
+     * Dipakai View agar ID yang salah format langsung ditolak sebelum field berikutnya ditanyakan.
+     *
+     * @throws ValidationException jika {@code rawId} bukan angka
      */
-    public void updateActivity(int id, String title, String day, String time)
-            throws EntityNotFoundException, ValidationException {
+    public void validateId(String rawId) throws ValidationException {
+        InputValidator.parseId(rawId);
+    }
+
+    /**
+     * Mengubah judul, hari, dan/atau waktu kegiatan berdasarkan input mentah dari user.
+     * Teks kosong pada sebuah field berarti field tersebut tidak diubah.
+     *
+     * @throws ValidationException     jika {@code rawId} bukan angka
+     * @throws EntityNotFoundException jika tidak ada kegiatan dengan ID tersebut
+     */
+    public void updateActivity(String rawId, String title, String day, String time)
+            throws ValidationException, EntityNotFoundException {
+        int id = InputValidator.parseId(rawId);
         Optional<Activity> found = activityRepository.findById(id);
         if (found.isEmpty()) {
             throw new EntityNotFoundException(id);
         }
 
-        requireTextIfPresent(title, "Judul kegiatan tidak boleh kosong!");
-        requireTextIfPresent(day, "Hari tidak boleh kosong!");
-        requireTextIfPresent(time, "Waktu tidak boleh kosong!");
-
         Activity activity = found.get();
-        if (title != null) {
-            activity.changeTitle(title);
+        String newTitle = InputValidator.blankToNull(title);
+        String newDay = InputValidator.blankToNull(day);
+        String newTime = InputValidator.blankToNull(time);
+        if (newTitle != null) {
+            activity.changeTitle(newTitle);
         }
-        if (day != null) {
-            activity.changeDay(day);
+        if (newDay != null) {
+            activity.changeDay(newDay);
         }
-        if (time != null) {
-            activity.changeTime(time);
+        if (newTime != null) {
+            activity.changeTime(newTime);
         }
         activityRepository.update(activity);
     }
@@ -65,30 +79,40 @@ public class ActivityUseCase {
         return activityRepository.findBy(a -> a.getTitle().toLowerCase().contains(lowerKeyword));
     }
 
-    /** Mengurutkan data sesuai kriteria {@link SortOption}. */
-    public List<Activity> sortActivities(SortOption option) {
+    /**
+     * Mengurutkan kegiatan sesuai pilihan menu mentah dari user
+     * (1 = hari, 2 = waktu, 3 = judul A-Z, 4 = judul Z-A).
+     *
+     * @throws ValidationException jika pilihan tidak dikenali
+     */
+    public List<Activity> sortActivities(String choice) throws ValidationException {
+        SortOption option = parseSortOption(choice);
         return activityRepository.findAll().stream()
                 .sorted(option.comparator())
                 .toList();
     }
 
-    /** Menghapus data berdasarkan ID; melempar exception jika tidak ditemukan. */
-    public void removeActivity(int id) throws EntityNotFoundException {
+    /**
+     * Menghapus kegiatan berdasarkan ID mentah dari user.
+     *
+     * @throws ValidationException     jika {@code rawId} bukan angka
+     * @throws EntityNotFoundException jika tidak ada kegiatan dengan ID tersebut
+     */
+    public void removeActivity(String rawId) throws ValidationException, EntityNotFoundException {
+        int id = InputValidator.parseId(rawId);
         if (!activityRepository.deleteById(id)) {
             throw new EntityNotFoundException(id);
         }
     }
 
-    private void requireText(String value, String message) throws ValidationException {
-        if (value == null || value.trim().isEmpty()) {
-            throw new ValidationException(message);
-        }
-    }
-
-    /** Validasi opsional untuk update parsial: null berarti field tidak diubah. */
-    private void requireTextIfPresent(String value, String message) throws ValidationException {
-        if (value != null) {
-            requireText(value, message);
-        }
+    /** Memetakan pilihan menu menjadi {@link SortOption}; melempar {@link ValidationException} jika tidak dikenali. */
+    private SortOption parseSortOption(String choice) throws ValidationException {
+        return switch (choice) {
+            case "1" -> SortOption.DAY;
+            case "2" -> SortOption.TIME;
+            case "3" -> SortOption.TITLE_ASC;
+            case "4" -> SortOption.TITLE_DESC;
+            default -> throw new ValidationException("Pilihan tidak valid!");
+        };
     }
 }

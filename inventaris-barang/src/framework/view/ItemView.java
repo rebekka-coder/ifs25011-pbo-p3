@@ -1,19 +1,16 @@
 package framework.view;
 
 import adapter.presenter.ItemPresenter;
-import domain.entity.SortOption;
 import domain.exception.EntityNotFoundException;
 import domain.exception.ValidationException;
 import framework.util.InputUtil;
+import static framework.util.InputUtil.CANCEL_INPUT;
 import usecase.ItemUseCase;
 
 /**
  * Tampilan konsol aplikasi inventaris barang.
  */
 public class ItemView {
-    /** Input yang dipakai user untuk membatalkan operasi atau keluar dari aplikasi. */
-    private static final String CANCEL_INPUT = "x";
-
     private final ItemUseCase useCase;
     private final ItemPresenter presenter;
 
@@ -58,7 +55,7 @@ public class ItemView {
         System.out.println("x. Keluar");
     }
 
-    /** Form tambah barang. Stok divalidasi sebelum kategori ditanyakan. */
+    /** Form tambah barang. Jumlah stok divalidasi sebelum kategori ditanyakan. */
     private void addItem() {
         System.out.println("[Menambah Barang]");
         String name = InputUtil.input("Nama (x Jika Batal)");
@@ -66,9 +63,10 @@ public class ItemView {
             return;
         }
 
-        int quantity;
+        // Jumlah divalidasi lebih dulu (fail-fast) sebelum kategori ditanyakan.
+        String quantity = InputUtil.input("Jumlah");
         try {
-            quantity = parseQuantity(InputUtil.input("Jumlah"));
+            useCase.validateQuantity(quantity);
         } catch (ValidationException e) {
             presenter.showValidationError(e.getMessage());
             return;
@@ -86,7 +84,7 @@ public class ItemView {
         }
     }
 
-    /** Form ubah stok barang. */
+    /** Form ubah stok barang: jumlah kosong berarti stok tidak diubah. */
     private void updateStock() {
         System.out.println("[Mengubah Stok]");
         String strId = InputUtil.input("ID Barang yang diubah (x Jika Batal)");
@@ -94,20 +92,18 @@ public class ItemView {
             return;
         }
 
-        int id;
+        // ID divalidasi lebih dulu (fail-fast) sebelum jumlah baru ditanyakan.
         try {
-            id = parseId(strId);
+            useCase.validateId(strId);
         } catch (ValidationException e) {
-            presenter.showInvalidId();
+            presenter.showValidationError(e.getMessage());
             return;
         }
 
         String strQuantity = InputUtil.input("Jumlah Baru (Kosongkan jika tidak ingin mengubah)");
 
         try {
-            // null berarti stok tidak diubah
-            Integer quantity = strQuantity.isBlank() ? null : parseQuantity(strQuantity);
-            useCase.updateStock(id, quantity);
+            useCase.updateStock(strId, strQuantity);
             presenter.showUpdateSuccess();
         } catch (EntityNotFoundException e) {
             presenter.showUpdateFailed(e.getId());
@@ -125,7 +121,7 @@ public class ItemView {
         }
     }
 
-    /** Mengurutkan data sesuai kriteria {@link SortOption}. */
+    /** Form pengurutan barang: memilih kriteria lalu menampilkan hasilnya. */
     private void sortItem() {
         System.out.println("[Mengurutkan Barang]");
         System.out.println("Pilihan Pengurutan:");
@@ -141,15 +137,14 @@ public class ItemView {
             return;
         }
 
-        SortOption option = mapSortOption(input);
-        if (option == null) {
-            presenter.showInvalidSortOption();
-            return;
+        try {
+            presenter.showSortedItems(useCase.sortItems(input));
+        } catch (ValidationException e) {
+            presenter.showValidationError(e.getMessage());
         }
-        presenter.showSortedItems(useCase.sortItems(option));
     }
 
-    /** Menghapus data berdasarkan ID; melempar exception jika tidak ditemukan. */
+    /** Form hapus barang berdasarkan ID; menampilkan pesan gagal jika ID salah atau tidak ditemukan. */
     private void removeItem() {
         System.out.println("[Menghapus Barang]");
         String strId = InputUtil.input("[ID Barang] yang dihapus (x Jika Batal)");
@@ -158,46 +153,12 @@ public class ItemView {
         }
 
         try {
-            int id = parseId(strId);
-            useCase.removeItem(id);
+            useCase.removeItem(strId);
             presenter.showRemoveSuccess();
         } catch (ValidationException e) {
-            presenter.showInvalidId();
+            presenter.showValidationError(e.getMessage());
         } catch (EntityNotFoundException e) {
             presenter.showRemoveFailed(e.getId());
         }
-    }
-
-    /** Mengonversi input menjadi ID; melempar {@link ValidationException} jika bukan angka. */
-    private int parseId(String value) throws ValidationException {
-        try {
-            return Integer.parseInt(value.trim());
-        } catch (NumberFormatException e) {
-            throw new ValidationException("ID tidak valid!");
-        }
-    }
-
-    /** Mengonversi input menjadi jumlah stok (numerik, > 0). */
-    private int parseQuantity(String value) throws ValidationException {
-        try {
-            int quantity = Integer.parseInt(value.trim());
-            if (quantity <= 0) {
-                throw new ValidationException("Jumlah stok tidak valid!");
-            }
-            return quantity;
-        } catch (NumberFormatException e) {
-            throw new ValidationException("Jumlah stok tidak valid!");
-        }
-    }
-
-    /** Memetakan pilihan menu ke {@link SortOption}; null jika tidak dikenali. */
-    private SortOption mapSortOption(String input) {
-        return switch (input) {
-            case "1" -> SortOption.NAME_ASC;
-            case "2" -> SortOption.NAME_DESC;
-            case "3" -> SortOption.QUANTITY_ASC;
-            case "4" -> SortOption.QUANTITY_DESC;
-            default -> null;
-        };
     }
 }

@@ -6,23 +6,11 @@ import java.util.List;
 /**
  * Presenter yang memformat data kegiatan menjadi output layar.
  */
-public class ActivityPresenter {
+public class ActivityPresenter extends BasePresenter<Activity> {
 
-    /** Memformat satu data menjadi baris teks untuk ditampilkan. */
-    private String format(Activity a) {
+    @Override
+    protected String format(Activity a) {
         return String.format("[%d] %s | Hari: %s | Pukul: %s", a.getId(), a.getTitle(), a.getDay(), a.getTime());
-    }
-
-    /** Helper umum untuk mencetak daftar; menampilkan pesan kosong jika tidak ada data. */
-    private void printList(List<Activity> list, String header, String emptyMessage) {
-        System.out.println(header);
-        if (list.isEmpty()) {
-            System.out.println(emptyMessage);
-            return;
-        }
-        for (Activity a : list) {
-            System.out.println(format(a));
-        }
     }
 
     /** Menampilkan seluruh data yang tersimpan. */
@@ -63,25 +51,5 @@ public class ActivityPresenter {
     /** Menampilkan pesan gagal saat data dengan ID tertentu tidak dapat dihapus. */
     public void showRemoveFailed(int id) {
         System.out.printf("[!] Gagal menghapus kegiatan dengan ID: %d.%n", id);
-    }
-
-    /** Menampilkan pesan saat pilihan menu tidak dikenali. */
-    public void showInvalidChoice() {
-        System.out.println("[!] Pilihan tidak dimengerti.");
-    }
-
-    /** Menampilkan pesan saat ID yang dimasukkan bukan angka. */
-    public void showInvalidId() {
-        System.out.println("[!] ID tidak valid!");
-    }
-
-    /** Menampilkan pesan saat opsi pengurutan tidak valid. */
-    public void showInvalidSortOption() {
-        System.out.println("[!] Pilihan tidak valid!");
-    }
-
-    /** Menampilkan pesan kegagalan validasi dari domain. */
-    public void showValidationError(String message) {
-        System.out.println("[!] " + message);
     }
 }

@@ -6,23 +6,11 @@ import java.util.List;
 /**
  * Presenter yang memformat data kontak menjadi output layar.
  */
-public class ContactPresenter {
+public class ContactPresenter extends BasePresenter<Contact> {
 
-    /** Memformat satu data menjadi baris teks untuk ditampilkan. */
-    private String format(Contact c) {
+    @Override
+    protected String format(Contact c) {
         return String.format("[%d] %s | Telp: %s | Email: %s", c.getId(), c.getName(), c.getPhone(), c.getEmail());
-    }
-
-    /** Helper umum untuk mencetak daftar; menampilkan pesan kosong jika tidak ada data. */
-    private void printList(List<Contact> list, String header, String emptyMessage) {
-        System.out.println(header);
-        if (list.isEmpty()) {
-            System.out.println(emptyMessage);
-            return;
-        }
-        for (Contact c : list) {
-            System.out.println(format(c));
-        }
     }
 
     /** Menampilkan seluruh data yang tersimpan. */
@@ -63,25 +51,5 @@ public class ContactPresenter {
     /** Menampilkan pesan gagal saat data dengan ID tertentu tidak dapat dihapus. */
     public void showRemoveFailed(int id) {
         System.out.printf("[!] Gagal menghapus kontak dengan ID: %d.%n", id);
-    }
-
-    /** Menampilkan pesan saat pilihan menu tidak dikenali. */
-    public void showInvalidChoice() {
-        System.out.println("[!] Pilihan tidak dimengerti.");
-    }
-
-    /** Menampilkan pesan saat ID yang dimasukkan bukan angka. */
-    public void showInvalidId() {
-        System.out.println("[!] ID tidak valid!");
-    }
-
-    /** Menampilkan pesan saat opsi pengurutan tidak valid. */
-    public void showInvalidSortOption() {
-        System.out.println("[!] Pilihan tidak valid!");
-    }
-
-    /** Menampilkan pesan kegagalan validasi dari domain. */
-    public void showValidationError(String message) {
-        System.out.println("[!] " + message);
     }
 }

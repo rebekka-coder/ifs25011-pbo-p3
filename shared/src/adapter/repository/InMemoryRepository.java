@@ -16,13 +16,21 @@ import java.util.function.Predicate;
  */
 public abstract class InMemoryRepository<T, ID> implements IRepository<T, ID> {
     /** Penyimpanan data entitas di memori. */
-    protected final List<T> data = new ArrayList<>();
+    private final List<T> data = new ArrayList<>();
+
+    /** Penghitung ID otomatis; ID tidak dipakai ulang walaupun data dihapus. */
+    private int idCounter = 0;
 
     /** Fungsi untuk mengekstrak ID dari objek entitas. */
     private final Function<T, ID> idExtractor;
 
     protected InMemoryRepository(Function<T, ID> idExtractor) {
         this.idExtractor = idExtractor;
+    }
+
+    /** Menghasilkan ID bilangan bulat unik berikutnya (dimulai dari 1). */
+    protected int nextId() {
+        return ++idCounter;
     }
 
     @Override

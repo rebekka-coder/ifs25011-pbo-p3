@@ -7,8 +7,6 @@ import domain.repository.IGuestRepository;
  * Implementasi repository tamu menggunakan basis generic {@link InMemoryRepository}.
  */
 public class GuestRepository extends InMemoryRepository<Guest, Integer> implements IGuestRepository {
-    private int idCounter = 0;
-
     public GuestRepository() {
         super(Guest::getId);
     }
@@ -16,9 +14,5 @@ public class GuestRepository extends InMemoryRepository<Guest, Integer> implemen
     @Override
     public Guest save(String name, String purpose) {
         return save(new Guest(nextId(), name, purpose));
-    }
-
-    private int nextId() {
-        return ++idCounter;
     }
 }
