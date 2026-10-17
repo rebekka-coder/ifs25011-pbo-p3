@@ -39,4 +39,9 @@ public class Transaction {
     public TransactionType getType() {
         return type;
     }
+
+    /** Jumlah bertanda untuk perhitungan saldo: positif untuk pemasukan, negatif untuk pengeluaran. */
+    public long signedAmount() {
+        return type == TransactionType.INCOME ? amount : -amount;
+    }
 }

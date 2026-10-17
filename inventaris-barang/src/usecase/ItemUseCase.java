@@ -6,7 +6,6 @@ import domain.exception.EntityNotFoundException;
 import domain.exception.ValidationException;
 import domain.repository.IItemRepository;
 import java.util.List;
-import java.util.Optional;
 
 /**
  * Use case inventaris barang. Menerima input mentah (String) dari View, melakukan parsing dan validasi,
@@ -44,9 +43,9 @@ public class ItemUseCase {
      */
     public Item addItem(String name, String rawQuantity, String category) throws ValidationException {
         int quantity = parseQuantity(rawQuantity);
-        InputValidator.requireText(name, "Nama barang tidak boleh kosong!");
-        InputValidator.requireText(category, "Kategori tidak boleh kosong!");
-        return itemRepository.save(name, quantity, category);
+        String cleanName = InputValidator.requireText(name, "Nama barang tidak boleh kosong!");
+        String cleanCategory = InputValidator.requireText(category, "Kategori tidak boleh kosong!");
+        return itemRepository.save(cleanName, quantity, cleanCategory);
     }
 
     /**
@@ -72,11 +71,8 @@ public class ItemUseCase {
         String quantityText = InputValidator.blankToNull(rawQuantity);
         Integer quantity = quantityText == null ? null : parseQuantity(quantityText);
 
-        Optional<Item> found = itemRepository.findById(id);
-        if (found.isEmpty()) {
-            throw new EntityNotFoundException(id);
-        }
-        Item item = found.get();
+        Item item = itemRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException(id));
         if (quantity != null) {
             item.changeQuantity(quantity);
         }
@@ -85,8 +81,7 @@ public class ItemUseCase {
 
     /** Mencari barang berdasarkan nama (case-insensitive). */
     public List<Item> searchItems(String keyword) {
-        String lowerKeyword = keyword.toLowerCase();
-        return itemRepository.findBy(i -> i.getName().toLowerCase().contains(lowerKeyword));
+        return itemRepository.findBy(item -> TextMatcher.containsIgnoreCase(item.getName(), keyword));
     }
 
     /**

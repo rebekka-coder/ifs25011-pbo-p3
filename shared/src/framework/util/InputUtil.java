@@ -6,12 +6,15 @@ import java.util.Scanner;
  * Utility untuk membaca input string dari keyboard.
  * Berada di layer framework karena bergantung pada {@link System#in}.
  */
-public class InputUtil {
+public final class InputUtil {
     /** Input yang dipakai user untuk membatalkan operasi atau keluar dari aplikasi. */
     public static final String CANCEL_INPUT = "x";
 
     /** Scanner bersama untuk seluruh aplikasi (satu instance cukup). */
-    private static final Scanner scanner = new Scanner(System.in);
+    private static final Scanner SCANNER = new Scanner(System.in);
+
+    private InputUtil() {
+    }
 
     /**
      * Menampilkan prompt dan membaca satu baris input dari user.
@@ -22,10 +25,10 @@ public class InputUtil {
      */
     public static String input(String info) {
         System.out.print(info + " : ");
-        if (!scanner.hasNextLine()) {
+        if (!SCANNER.hasNextLine()) {
             System.out.println();
             return CANCEL_INPUT;
         }
-        return scanner.nextLine();
+        return SCANNER.nextLine();
     }
 }

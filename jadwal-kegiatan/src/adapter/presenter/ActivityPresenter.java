@@ -9,28 +9,29 @@ import java.util.List;
 public class ActivityPresenter extends BasePresenter<Activity> {
 
     @Override
-    protected String format(Activity a) {
-        return String.format("[%d] %s | Hari: %s | Pukul: %s", a.getId(), a.getTitle(), a.getDay(), a.getTime());
+    protected String format(Activity activity) {
+        return String.format("[%d] %s | Hari: %s | Pukul: %s",
+                activity.getId(), activity.getTitle(), activity.getDay(), activity.getTime());
     }
 
     /** Menampilkan seluruh data yang tersimpan. */
-    public void showActivities(List<Activity> list) {
-        printList(list, "Daftar Kegiatan:", "- Data kegiatan belum tersedia!");
+    public void showActivities(List<Activity> activities) {
+        printList(activities, "Daftar Kegiatan:", "- Data kegiatan belum tersedia!");
     }
 
     /** Menampilkan hasil pencarian berdasarkan kata kunci. */
-    public void showSearchResults(List<Activity> list, String keyword) {
-        printList(list, "Hasil Pencarian: \"" + keyword + "\"", "- Kegiatan tidak ditemukan!");
+    public void showSearchResults(List<Activity> activities, String keyword) {
+        printList(activities, "Hasil Pencarian: \"" + keyword + "\"", "- Kegiatan tidak ditemukan!");
     }
 
     /** Menampilkan daftar data yang sudah diurutkan. */
-    public void showSortedActivities(List<Activity> list) {
-        printList(list, "Daftar Kegiatan (Terurut):", "- Data kegiatan belum tersedia!");
+    public void showSortedActivities(List<Activity> activities) {
+        printList(activities, "Daftar Kegiatan (Terurut):", "- Data kegiatan belum tersedia!");
     }
 
     /** Menampilkan pesan sukses setelah data ditambahkan. */
-    public void showAddSuccess(Activity a) {
-        System.out.printf("Berhasil menambah kegiatan: %s%n", format(a));
+    public void showAddSuccess(Activity activity) {
+        System.out.printf("Berhasil menambah kegiatan: %s%n", format(activity));
     }
 
     /** Menampilkan pesan sukses setelah data diubah. */

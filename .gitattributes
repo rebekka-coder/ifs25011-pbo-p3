@@ -1,19 +1,5 @@
-# Java compiled files
-*.class
+# Normalisasi line ending: git menyimpan LF di repo dan menyesuaikan saat checkout.
+* text=auto
 
-# Build output directories
-out/
-build/
-target/
-bin/
-
-# IDE files
-.idea/
-*.iml
-.project
-.classpath
-.settings/
-
-# OS files
-.DS_Store
-Thumbs.db
+# Skrip shell harus selalu LF, kalau CRLF tidak bisa dijalankan di Git Bash/Linux/macOS.
+*.sh text eol=lf

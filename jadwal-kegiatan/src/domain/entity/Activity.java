@@ -1,6 +1,7 @@
 package domain.entity;
 
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Entity inti yang merepresentasikan satu kegiatan terjadwal.
@@ -42,7 +43,7 @@ public class Activity {
 
     /** Nomor urut hari (Senin = 0 ... Minggu = 6); hari tak dikenal diurutkan paling akhir. */
     public int getDayOrder() {
-        int index = DAYS.indexOf(day.trim().toLowerCase());
+        int index = DAYS.indexOf(day.trim().toLowerCase(Locale.ROOT));
         return index >= 0 ? index : DAYS.size();
     }
 

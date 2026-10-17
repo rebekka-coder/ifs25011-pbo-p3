@@ -24,15 +24,14 @@ public class GuestUseCase {
 
     /** Mendaftarkan tamu baru setelah validasi. */
     public Guest registerGuest(String name, String purpose) throws ValidationException {
-        InputValidator.requireText(name, "Nama tamu tidak boleh kosong!");
-        InputValidator.requireText(purpose, "Tujuan kunjungan tidak boleh kosong!");
-        return guestRepository.save(name, purpose);
+        String cleanName = InputValidator.requireText(name, "Nama tamu tidak boleh kosong!");
+        String cleanPurpose = InputValidator.requireText(purpose, "Tujuan kunjungan tidak boleh kosong!");
+        return guestRepository.save(cleanName, cleanPurpose);
     }
 
     /** Mencari tamu berdasarkan nama (case-insensitive). */
     public List<Guest> searchGuests(String keyword) {
-        String lowerKeyword = keyword.toLowerCase();
-        return guestRepository.findBy(g -> g.getName().toLowerCase().contains(lowerKeyword));
+        return guestRepository.findBy(guest -> TextMatcher.containsIgnoreCase(guest.getName(), keyword));
     }
 
     /**

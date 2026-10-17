@@ -6,13 +6,24 @@ import domain.exception.EntityNotFoundException;
 import domain.exception.ValidationException;
 import domain.repository.IContactRepository;
 import java.util.List;
-import java.util.Optional;
+import java.util.regex.Pattern;
 
 /**
  * Use case kontak teman. Menerima input mentah (String) dari View, melakukan parsing dan validasi,
  * lalu melempar checked exception domain jika gagal. Tidak melakukan I/O.
  */
 public class ContactUseCase {
+    /** Telepon: 8-15 digit angka, boleh diawali tanda "+" (mis. 081234567890 atau +6281234567890). */
+    private static final Pattern PHONE_PATTERN = Pattern.compile("\\+?\\d{8,15}");
+
+    /** Email sederhana: bagian-lokal@domain.tld (mis. budi@email.com). */
+    private static final Pattern EMAIL_PATTERN = Pattern.compile("[\\w.%+-]+@[A-Za-z0-9-]+(\\.[A-Za-z0-9-]+)+");
+
+    private static final String INVALID_PHONE_MESSAGE =
+            "Nomor telepon tidak valid! Gunakan 8-15 digit angka (boleh diawali +).";
+    private static final String INVALID_EMAIL_MESSAGE = "Format email tidak valid!";
+    private static final String MIN_ONE_FIELD_MESSAGE = "Minimal satu field harus diisi untuk update!";
+
     private final IContactRepository contactRepository;
 
     public ContactUseCase(IContactRepository contactRepository) {
@@ -24,12 +35,18 @@ public class ContactUseCase {
         return contactRepository.findAll();
     }
 
-    /** Menambahkan kontak baru setelah validasi. */
+    /**
+     * Menambahkan kontak baru setelah validasi.
+     *
+     * @throws ValidationException jika ada field yang kosong, atau format telepon/email salah
+     */
     public Contact addContact(String name, String phone, String email) throws ValidationException {
-        InputValidator.requireText(name, "Nama tidak boleh kosong!");
-        InputValidator.requireText(phone, "Nomor telepon tidak boleh kosong!");
-        InputValidator.requireText(email, "Email tidak boleh kosong!");
-        return contactRepository.save(name, phone, email);
+        String cleanName = InputValidator.requireText(name, "Nama tidak boleh kosong!");
+        String cleanPhone = InputValidator.requireText(phone, "Nomor telepon tidak boleh kosong!");
+        String cleanEmail = InputValidator.requireText(email, "Email tidak boleh kosong!");
+        validatePhoneFormat(cleanPhone);
+        validateEmailFormat(cleanEmail);
+        return contactRepository.save(cleanName, cleanPhone, cleanEmail);
     }
 
     /**
@@ -44,23 +61,33 @@ public class ContactUseCase {
 
     /**
      * Mengubah nama, telepon, dan/atau email kontak berdasarkan input mentah dari user.
-     * Teks kosong pada sebuah field berarti field tersebut tidak diubah.
+     * Teks kosong pada sebuah field berarti field tersebut tidak diubah, tetapi
+     * minimal satu field harus diisi. Semua field divalidasi lebih dulu sehingga
+     * kontak tidak pernah berubah sebagian.
      *
-     * @throws ValidationException     jika {@code rawId} bukan angka
+     * @throws ValidationException     jika {@code rawId} bukan angka, semua field kosong,
+     *                                 atau format telepon/email yang diisi salah
      * @throws EntityNotFoundException jika tidak ada kontak dengan ID tersebut
      */
     public void updateContact(String rawId, String name, String phone, String email)
             throws ValidationException, EntityNotFoundException {
         int id = InputValidator.parseId(rawId);
-        Optional<Contact> found = contactRepository.findById(id);
-        if (found.isEmpty()) {
-            throw new EntityNotFoundException(id);
-        }
+        Contact contact = contactRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException(id));
 
-        Contact contact = found.get();
         String newName = InputValidator.blankToNull(name);
         String newPhone = InputValidator.blankToNull(phone);
         String newEmail = InputValidator.blankToNull(email);
+        if (newName == null && newPhone == null && newEmail == null) {
+            throw new ValidationException(MIN_ONE_FIELD_MESSAGE);
+        }
+        if (newPhone != null) {
+            validatePhoneFormat(newPhone);
+        }
+        if (newEmail != null) {
+            validateEmailFormat(newEmail);
+        }
+
         if (newName != null) {
             contact.changeName(newName);
         }
@@ -75,8 +102,7 @@ public class ContactUseCase {
 
     /** Mencari kontak berdasarkan nama (case-insensitive). */
     public List<Contact> searchContacts(String keyword) {
-        String lowerKeyword = keyword.toLowerCase();
-        return contactRepository.findBy(c -> c.getName().toLowerCase().contains(lowerKeyword));
+        return contactRepository.findBy(contact -> TextMatcher.containsIgnoreCase(contact.getName(), keyword));
     }
 
     /**
@@ -102,6 +128,16 @@ public class ContactUseCase {
         if (!contactRepository.deleteById(id)) {
             throw new EntityNotFoundException(id);
         }
+    }
+
+    /** Memastikan nomor telepon (sudah dirapikan) sesuai format. */
+    private void validatePhoneFormat(String phone) throws ValidationException {
+        InputValidator.requireFormat(phone, PHONE_PATTERN, INVALID_PHONE_MESSAGE);
+    }
+
+    /** Memastikan email (sudah dirapikan) sesuai format. */
+    private void validateEmailFormat(String email) throws ValidationException {
+        InputValidator.requireFormat(email, EMAIL_PATTERN, INVALID_EMAIL_MESSAGE);
     }
 
     /** Memetakan pilihan menu menjadi {@link SortOption}; melempar {@link ValidationException} jika tidak dikenali. */

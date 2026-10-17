@@ -14,6 +14,8 @@ import java.util.List;
  * lalu melempar checked exception domain jika gagal. Tidak melakukan I/O.
  */
 public class FinanceUseCase {
+    private static final String INVALID_AMOUNT_MESSAGE = "Jumlah tidak valid!";
+
     /** Port repository yang di-inject dari luar (Dependency Inversion). */
     private final ITransactionRepository transactionRepository;
 
@@ -34,12 +36,12 @@ public class FinanceUseCase {
      */
     public Transaction addTransaction(String description, String rawAmount, TransactionType type)
             throws ValidationException {
-        long amount = InputValidator.parseLong(rawAmount, "Jumlah tidak valid!");
-        InputValidator.requireText(description, "Keterangan tidak boleh kosong!");
+        long amount = InputValidator.parseLong(rawAmount, INVALID_AMOUNT_MESSAGE);
+        String cleanDescription = InputValidator.requireText(description, "Keterangan tidak boleh kosong!");
         if (amount <= 0) {
-            throw new ValidationException("Jumlah tidak valid!");
+            throw new ValidationException(INVALID_AMOUNT_MESSAGE);
         }
-        return transactionRepository.save(description, amount, type);
+        return transactionRepository.save(cleanDescription, amount, type);
     }
 
     /**
@@ -57,9 +59,8 @@ public class FinanceUseCase {
 
     /** Mencari transaksi yang keterangannya mengandung kata kunci (case-insensitive). */
     public List<Transaction> searchTransactions(String keyword) {
-        String lowerKeyword = keyword.toLowerCase();
         return transactionRepository.findBy(
-                t -> t.getDescription().toLowerCase().contains(lowerKeyword));
+                transaction -> TextMatcher.containsIgnoreCase(transaction.getDescription(), keyword));
     }
 
     /**
@@ -77,15 +78,9 @@ public class FinanceUseCase {
 
     /** Menghitung saldo = total pemasukan - total pengeluaran. */
     public long getBalance() {
-        long balance = 0;
-        for (Transaction t : transactionRepository.findAll()) {
-            if (t.getType() == TransactionType.INCOME) {
-                balance += t.getAmount();
-            } else {
-                balance -= t.getAmount();
-            }
-        }
-        return balance;
+        return transactionRepository.findAll().stream()
+                .mapToLong(Transaction::signedAmount)
+                .sum();
     }
 
     /** Memetakan pilihan menu menjadi {@link SortOption}; melempar {@link ValidationException} jika tidak dikenali. */

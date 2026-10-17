@@ -12,7 +12,8 @@ buku-tamu/
   test-cases/                   input uji (TC-xx.tc)
   input.txt                     contoh input
 
-shared/src/                     kode bersama semua studi kasus (ditambahkan lewat -sourcepath)
+shared/src/                     kode bersama semua studi kasus (satu sumber, ditambahkan lewat -sourcepath;
+                                dilakukan otomatis oleh ../build.sh)
     adapter/presenter/BasePresenter.java
     adapter/repository/InMemoryRepository.java
     domain/exception/DomainException.java
@@ -21,5 +22,6 @@ shared/src/                     kode bersama semua studi kasus (ditambahkan lewa
     domain/repository/IRepository.java
     framework/util/InputUtil.java
     usecase/InputValidator.java
+    usecase/TextMatcher.java
 
 Arah dependensi: framework -> adapter -> usecase -> domain (domain tidak bergantung pada layer lain).

@@ -11,30 +11,31 @@ import java.util.List;
 public class FinancePresenter extends BasePresenter<Transaction> {
 
     @Override
-    protected String format(Transaction t) {
-        String type = t.getType() == TransactionType.INCOME ? "[Pemasukan]" : "[Pengeluaran]";
-        return String.format("[%d] %s | Rp %d | %s", t.getId(), t.getDescription(), t.getAmount(), type);
+    protected String format(Transaction transaction) {
+        String type = transaction.getType() == TransactionType.INCOME ? "[Pemasukan]" : "[Pengeluaran]";
+        return String.format("[%d] %s | Rp %d | %s",
+                transaction.getId(), transaction.getDescription(), transaction.getAmount(), type);
     }
 
     /** Menampilkan daftar semua transaksi beserta saldo. */
-    public void showTransactions(List<Transaction> list, long balance) {
-        printList(list, "Daftar Transaksi:", "- Belum ada transaksi!");
+    public void showTransactions(List<Transaction> transactions, long balance) {
+        printList(transactions, "Daftar Transaksi:", "- Belum ada transaksi!");
         System.out.printf("Saldo: Rp %d%n", balance);
     }
 
     /** Menampilkan hasil pencarian berdasarkan kata kunci. */
-    public void showSearchResults(List<Transaction> list, String keyword) {
-        printList(list, "Hasil Pencarian: \"" + keyword + "\"", "- Transaksi tidak ditemukan!");
+    public void showSearchResults(List<Transaction> transactions, String keyword) {
+        printList(transactions, "Hasil Pencarian: \"" + keyword + "\"", "- Transaksi tidak ditemukan!");
     }
 
     /** Menampilkan daftar data yang sudah diurutkan. */
-    public void showSortedTransactions(List<Transaction> list) {
-        printList(list, "Daftar Transaksi (Terurut):", "- Belum ada transaksi!");
+    public void showSortedTransactions(List<Transaction> transactions) {
+        printList(transactions, "Daftar Transaksi (Terurut):", "- Belum ada transaksi!");
     }
 
     /** Menampilkan pesan sukses setelah data ditambahkan. */
-    public void showAddSuccess(Transaction t) {
-        System.out.printf("Berhasil menambah transaksi: %s%n", format(t));
+    public void showAddSuccess(Transaction transaction) {
+        System.out.printf("Berhasil menambah transaksi: %s%n", format(transaction));
     }
 
     /** Menampilkan saldo saat ini. */

@@ -15,9 +15,4 @@ public class ActivityRepository extends InMemoryRepository<Activity, Integer> im
     public Activity save(String title, String day, String time) {
         return save(new Activity(nextId(), title, day, time));
     }
-
-    private int nextId() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'nextId'");
-    }
 }

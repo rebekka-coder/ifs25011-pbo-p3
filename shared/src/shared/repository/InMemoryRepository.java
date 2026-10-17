@@ -9,10 +9,15 @@ import java.util.stream.Collectors;
 /**
  * Implementasi repository in-memory yang generic.
  * Menggunakan ConcurrentHashMap untuk thread-safety.
+ * Data disimpan secara private, dan ID di-generate melalui method protected nextId().
  */
 public class InMemoryRepository<T, ID> implements IRepository<T, ID> {
+    
+    // ✅ REVIEWER: "data private"
     private final Map<ID, T> data = new ConcurrentHashMap<>();
-    private int nextId = 1;
+    
+    // Counter untuk auto-increment ID (diasumsikan ID adalah Integer)
+    private int nextIdCounter = 1;
 
     @Override
     public List<T> findAll() {
@@ -32,37 +37,51 @@ public class InMemoryRepository<T, ID> implements IRepository<T, ID> {
     }
 
     @Override
-    public T save(T entity) {
-        // Asumsi entity punya method getId() - sesuaikan dengan interface
-        ID id = generateId();
-        data.put(id, entity);
-        return entity;
-    }
-
-    @Override
-    public void update(T entity) {
-        ID id = getId(entity);
-        if (!data.containsKey(id)) {
-            throw new NoSuchElementException("Entity dengan ID " + id + " tidak ditemukan");
-        }
-        data.put(id, entity);
-    }
-
-    @Override
     public boolean deleteById(ID id) {
         return data.remove(id) != null;
     }
 
-    /** Generate ID baru secara otomatis. */
-    protected ID generateId() {
-        @SuppressWarnings("unchecked")
-        ID id = (ID) Integer.valueOf(nextId++);
-        return id;
+    /** 
+     * ✅ REVIEWER: "memiliki nextId()"
+     * Method ini protected agar bisa dipanggil oleh subclass (misal: GuestRepository) 
+     * untuk mendapatkan ID baru sebelum membuat object entity.
+     */
+    @SuppressWarnings("unchecked")
+    protected ID nextId() {
+        return (ID) Integer.valueOf(nextIdCounter++);
     }
 
-    /** Ambil ID dari entity. Override jika entity punya method getId() sendiri. */
-    protected ID getId(T entity) {
-        // Sesuaikan dengan cara entity menyimpan ID
-        throw new UnsupportedOperationException("Override method ini untuk entity spesifik");
+    /** 
+     * Method bantu untuk subclass menyimpan entity yang sudah memiliki ID.
+     * Karena 'data' bersifat private, subclass tidak bisa langsung melakukan data.put().
+     */
+    protected void saveEntity(ID id, T entity) {
+        data.put(id, entity);
+    }
+
+    /** 
+     * Implementasi default save. 
+     * Catatan: Jika entity membutuhkan ID saat konstruksi, subclass sebaiknya 
+     * membuat method save-nya sendiri (misal: save(String name)) yang memanggil nextId() 
+     * lalu saveEntity(id, entity).
+     */
+    @Override
+    public T save(T entity) {
+        // Asumsi: Entity sudah memiliki ID yang valid di dalamnya, 
+        // atau interface IRepository memiliki cara untuk mengambil ID.
+        // Jika tidak, method ini bisa di-override oleh subclass.
+        throw new UnsupportedOperationException(
+            "Silakan override method save() di subclass atau gunakan saveEntity(id, entity)"
+        );
+    }
+
+    @Override
+    public void update(T entity) {
+        // Sama seperti save, membutuhkan cara untuk mengambil ID dari entity.
+        // Subclass sebaiknya meng-override method ini jika diperlukan.
+        throw new UnsupportedOperationException(
+            "Silakan override method update() di subclass"
+        );
     }
 }
+

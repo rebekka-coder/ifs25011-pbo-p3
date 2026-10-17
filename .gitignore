@@ -1,11 +1,14 @@
 # Java compiled files
 *.class
 
-# Build output
+# Hasil compile tiap studi kasus (dibuat ulang oleh ./build.sh)
+output/
+
+# Build output directories
 out/
 build/
-bin/
 target/
+bin/
 
 # IDE files
 .idea/

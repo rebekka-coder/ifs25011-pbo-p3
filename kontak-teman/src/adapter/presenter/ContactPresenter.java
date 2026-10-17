@@ -9,28 +9,29 @@ import java.util.List;
 public class ContactPresenter extends BasePresenter<Contact> {
 
     @Override
-    protected String format(Contact c) {
-        return String.format("[%d] %s | Telp: %s | Email: %s", c.getId(), c.getName(), c.getPhone(), c.getEmail());
+    protected String format(Contact contact) {
+        return String.format("[%d] %s | Telp: %s | Email: %s",
+                contact.getId(), contact.getName(), contact.getPhone(), contact.getEmail());
     }
 
     /** Menampilkan seluruh data yang tersimpan. */
-    public void showContacts(List<Contact> list) {
-        printList(list, "Daftar Kontak:", "- Data kontak belum tersedia!");
+    public void showContacts(List<Contact> contacts) {
+        printList(contacts, "Daftar Kontak:", "- Data kontak belum tersedia!");
     }
 
     /** Menampilkan hasil pencarian berdasarkan kata kunci. */
-    public void showSearchResults(List<Contact> list, String keyword) {
-        printList(list, "Hasil Pencarian: \"" + keyword + "\"", "- Kontak tidak ditemukan!");
+    public void showSearchResults(List<Contact> contacts, String keyword) {
+        printList(contacts, "Hasil Pencarian: \"" + keyword + "\"", "- Kontak tidak ditemukan!");
     }
 
     /** Menampilkan daftar data yang sudah diurutkan. */
-    public void showSortedContacts(List<Contact> list) {
-        printList(list, "Daftar Kontak (Terurut):", "- Data kontak belum tersedia!");
+    public void showSortedContacts(List<Contact> contacts) {
+        printList(contacts, "Daftar Kontak (Terurut):", "- Data kontak belum tersedia!");
     }
 
     /** Menampilkan pesan sukses setelah data ditambahkan. */
-    public void showAddSuccess(Contact c) {
-        System.out.printf("Berhasil menambah kontak: %s%n", format(c));
+    public void showAddSuccess(Contact contact) {
+        System.out.printf("Berhasil menambah kontak: %s%n", format(contact));
     }
 
     /** Menampilkan pesan sukses setelah data diubah. */

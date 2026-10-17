@@ -86,6 +86,14 @@ public class ActivityView {
             return;
         }
 
+        // ID divalidasi lebih dulu (fail-fast) sebelum field baru ditanyakan.
+        try {
+            useCase.validateId(strId);
+        } catch (ValidationException e) {
+            presenter.showValidationError(e.getMessage());
+            return;
+        }
+
         String newTitle = InputUtil.input("Judul Baru (Kosongkan jika tidak ingin mengubah)");
         String newDay = InputUtil.input("Hari Baru (Kosongkan jika tidak ingin mengubah)");
         String newTime = InputUtil.input("Waktu Baru (Kosongkan jika tidak ingin mengubah)");
